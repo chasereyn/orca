@@ -6,7 +6,7 @@ import {
 } from './agent-session-resume'
 import type { SessionOptionValue } from './native-chat/input/native-chat-session-options'
 import { buildSleepingAgentLaunchConfig } from './sleeping-agent-launch-config'
-import { resolveAgentLaunchCommand } from './tui-agent-launch-command'
+import { resolveAgentLaunchCommand, withAgentTerminalInputArgs } from './tui-agent-launch-command'
 import type { AgentStartupPlan } from './tui-agent-startup'
 import { resolveStartupShell, type AgentStartupShell } from './tui-agent-startup-shell'
 import { TUI_AGENT_CONFIG } from './tui-agent-config'
@@ -59,7 +59,7 @@ export function buildAgentResumeStartupPlan(args: {
   const baseCommand = resolvedAgentCommand
     ? ({
         ok: true,
-        command: resolvedAgentCommand,
+        command: withAgentTerminalInputArgs(resolvedAgentCommand, args.agent, args.platform, shell),
         resumeLaunch: { agentCommand: resolvedAgentCommand },
         appliedSessionOptions: {}
       } as const)

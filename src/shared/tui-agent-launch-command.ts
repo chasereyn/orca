@@ -17,6 +17,25 @@ const STARTUP_UPDATE_PROMPT_SUPPRESSION_ARGS: Partial<Record<TuiAgent, readonly 
   codex: ['-c', 'check_for_update_on_startup=false']
 }
 
+// Why not win32: Codex there reads console input records and needs its burst for pastes (windowsInputRecordPasteNewline).
+// Elsewhere Orca's terminals bracket every paste, so the burst can only misread relayed typing (#34496).
+function agentTerminalInputArgs(agent: TuiAgent, platform: NodeJS.Platform): readonly string[] {
+  return agent === 'codex' && platform !== 'win32' ? ['-c', 'disable_paste_burst=true'] : []
+}
+
+/** Appends the per-launch terminal input flags to a recorded agent command. */
+export function withAgentTerminalInputArgs(
+  command: string,
+  agent: TuiAgent,
+  platform: NodeJS.Platform,
+  shell: AgentStartupShell
+): string {
+  const inputArgs = agentTerminalInputArgs(agent, platform)
+  return inputArgs.length
+    ? `${command} ${inputArgs.map((arg) => quoteStartupArg(arg, shell)).join(' ')}`
+    : command
+}
+
 export type ResolvedAgentLaunchCommand =
   | {
       ok: true
@@ -47,9 +66,10 @@ export function resolveAgentLaunchCommand(args: {
   const suppressionArgs = args.suppressStartupUpdatePrompt
     ? (STARTUP_UPDATE_PROMPT_SUPPRESSION_ARGS[args.agent] ?? [])
     : []
+  const inputHead = withAgentTerminalInputArgs(command, args.agent, args.platform, args.shell)
   const launchHead = suppressionArgs.length
-    ? `${command} ${suppressionArgs.map((arg) => quoteStartupArg(arg, args.shell)).join(' ')}`
-    : command
+    ? `${inputHead} ${suppressionArgs.map((arg) => quoteStartupArg(arg, args.shell)).join(' ')}`
+    : inputHead
   const trailingTokens = args.agentArgs?.trim()
     ? tokenizeStartupCommand(args.agentArgs.trim(), args.shell)
     : { ok: true as const, tokens: [], spans: [] }
