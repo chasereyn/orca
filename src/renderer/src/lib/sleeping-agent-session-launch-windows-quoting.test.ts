@@ -145,7 +145,9 @@ describe('launchSleepingAgentSession Windows shell quoting', () => {
       ]
     }
 
-    await expect(launch()).resolves.toBe(`codex 'resume' '${SESSION_ID}'`)
+    await expect(launch()).resolves.toBe(
+      `codex '-c' 'disable_paste_burst=true' 'resume' '${SESSION_ID}'`
+    )
   })
   it.each([
     ['cmd.exe', 'omp "--resume" "C:\\custom sessions\\session.jsonl"'],

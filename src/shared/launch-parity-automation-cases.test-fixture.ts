@@ -28,7 +28,7 @@ const SKIP = '--dangerously-skip-permissions'
 const POSIX_CLAUDE = `claude '${SKIP}'`
 const posix = { command: `${POSIX_CLAUDE} 'don'"'"'t stop'`, agentCommand: POSIX_CLAUDE }
 const powershell = { command: `${POSIX_CLAUDE} 'don''t stop'`, agentCommand: POSIX_CLAUDE }
-const CODEX = "codex '-c' 'disable_paste_burst=true' '--dangerously-bypass-approvals-and-sandbox'"
+const CODEX = "codex '--dangerously-bypass-approvals-and-sandbox'"
 const CODEX_LAUNCH =
   "codex '-c' 'disable_paste_burst=true' '--dangerously-bypass-approvals-and-sandbox'"
 const AGENT_COMMAND = {

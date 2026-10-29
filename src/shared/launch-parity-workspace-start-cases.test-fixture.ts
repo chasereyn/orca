@@ -13,8 +13,7 @@ import { POSIX_PATH, WIN_PATH } from './launch-parity-window-cases.test-fixture'
 const SKIP = '--dangerously-skip-permissions'
 const POSIX_CLAUDE = `claude '${SKIP}'`
 const CMD_CLAUDE = `claude "${SKIP}"`
-const POSIX_CODEX =
-  "codex '-c' 'disable_paste_burst=true' '--dangerously-bypass-approvals-and-sandbox'"
+const POSIX_CODEX = "codex '--dangerously-bypass-approvals-and-sandbox'"
 const BOB = "fix Bob's bug"
 // Longer than one typed line can safely hold, and multi-line: main's window still puts it on argv.
 const LONG_NOTE = `${'Read the failing test output and fix the cause. '.repeat(12)}\nThen run it again.`

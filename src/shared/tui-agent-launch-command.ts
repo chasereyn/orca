@@ -31,8 +31,11 @@ export function withAgentTerminalInputArgs(
   shell: AgentStartupShell
 ): string {
   const inputArgs = agentTerminalInputArgs(agent, platform)
-  // Why: a recorded command may already set it, including the user's own override.
-  return inputArgs.length && !command.includes('disable_paste_burst')
+  const tokens = tokenizeStartupCommand(command, shell)
+  // Why: the command may already set it (the user's own override), or end its options with `--`.
+  return inputArgs.length &&
+    !command.includes('disable_paste_burst') &&
+    !(tokens.ok && tokens.tokens.includes('--'))
     ? `${command} ${inputArgs.map((arg) => quoteStartupArg(arg, shell)).join(' ')}`
     : command
 }

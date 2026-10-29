@@ -31,4 +31,13 @@ describe('Codex paste-burst launch flag', () => {
     expect(launch.resumeLaunch.agentCommand).toBe('codex')
     expect(resume?.launchCommand.includes(flag)).toBe(expected)
   })
+  it('leaves a command that ends its options with -- alone', () => {
+    const launch = resolveAgentLaunchCommand({
+      agent: 'codex',
+      cmdOverrides: { codex: 'codex --' },
+      platform: 'linux',
+      shell: 'posix'
+    })
+    expect(launch.ok && launch.command).toBe('codex --')
+  })
 })

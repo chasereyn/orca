@@ -55,7 +55,12 @@ describe('automatic terminal permissions', () => {
           expect(resumed?.launchConfig.agentArgs).toBe('')
           expect(tokenizeStartupCommand(resumed?.launchCommand ?? '', shell)).toMatchObject({
             ok: true,
-            tokens: ['codex', 'resume', 'saved-session']
+            tokens: [
+              'codex',
+              ...(shell === 'posix' ? ['-c', 'disable_paste_burst=true'] : []),
+              'resume',
+              'saved-session'
+            ]
           })
           continue
         }
@@ -95,7 +100,16 @@ describe('codex resume permissions', () => {
         })
       expect(tokenizeStartupCommand(resume(false)?.launchCommand ?? '', shell)).toMatchObject({
         ok: true,
-        tokens: ['my-codex', '-m', 'gpt-5.5', '--add-dir', 'my dir', 'resume', 'saved-session']
+        tokens: [
+          'my-codex',
+          '-m',
+          'gpt-5.5',
+          '--add-dir',
+          'my dir',
+          ...(shell === 'posix' ? ['-c', 'disable_paste_burst=true'] : []),
+          'resume',
+          'saved-session'
+        ]
       })
       expect(resume(false)?.launchConfig.agentArgs).toBe("-m gpt-5.5 --add-dir 'my dir'")
       // A fork starts a new thread, so it keeps the recorded launch's permission.
