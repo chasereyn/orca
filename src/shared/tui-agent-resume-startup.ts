@@ -36,6 +36,8 @@ export function buildAgentResumeStartupPlan(args: {
   launchCwd?: string | null
   /** Open a copy of the conversation instead of re-entering it; null for agents that cannot. */
   fork?: boolean
+  /** OS that runs the agent when `platform` only picks quoting; null when unreported. */
+  agentHostPlatform?: NodeJS.Platform | null
 }): AgentStartupPlan | null {
   const resumeArgv = args.fork
     ? getAgentForkArgv(args.agent, args.providerSession)
@@ -59,7 +61,12 @@ export function buildAgentResumeStartupPlan(args: {
   const baseCommand = resolvedAgentCommand
     ? ({
         ok: true,
-        command: withAgentTerminalInputArgs(resolvedAgentCommand, args.agent, args.platform, shell),
+        command: withAgentTerminalInputArgs(
+          resolvedAgentCommand,
+          args.agent,
+          args.agentHostPlatform === undefined ? args.platform : args.agentHostPlatform,
+          shell
+        ),
         resumeLaunch: { agentCommand: resolvedAgentCommand },
         appliedSessionOptions: {}
       } as const)
@@ -71,7 +78,8 @@ export function buildAgentResumeStartupPlan(args: {
         agentArgs: recorded.agentArgs,
         sessionOptions: args.sessionOptions,
         sessionOptionsOverrideAgentArgs: args.sessionOptionsOverrideAgentArgs,
-        isRemote: args.isRemote
+        isRemote: args.isRemote,
+        agentHostPlatform: args.agentHostPlatform
       })
   if (!baseCommand.ok) {
     return null

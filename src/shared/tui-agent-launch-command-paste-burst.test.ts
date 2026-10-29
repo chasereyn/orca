@@ -40,4 +40,19 @@ describe('Codex paste-burst launch flag', () => {
     })
     expect(launch.ok && launch.command).toBe('codex --')
   })
+  it.each(['win32', null] as const)(
+    'stays off when the agent host is %s even if quoting is posix',
+    (agentHostPlatform) => {
+      const resume = buildAgentResumeStartupPlan({
+        agent: 'codex',
+        providerSession: { key: 'session_id', id: 'thread-1' },
+        cmdOverrides: {},
+        agentCommand: 'codex',
+        platform: 'darwin',
+        shell: 'posix',
+        agentHostPlatform
+      })
+      expect(resume?.launchCommand).toBe("codex 'resume' 'thread-1'")
+    }
+  )
 })

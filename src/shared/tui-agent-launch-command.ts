@@ -19,15 +19,21 @@ const STARTUP_UPDATE_PROMPT_SUPPRESSION_ARGS: Partial<Record<TuiAgent, readonly 
 
 // Why not win32: Codex there reads console input records and needs its burst for pastes (windowsInputRecordPasteNewline).
 // Elsewhere Orca's terminals bracket every paste, so the burst can only misread relayed typing (#34496).
-function agentTerminalInputArgs(agent: TuiAgent, platform: NodeJS.Platform): readonly string[] {
-  return agent === 'codex' && platform !== 'win32' ? ['-c', 'disable_paste_burst=true'] : []
+function agentTerminalInputArgs(
+  agent: TuiAgent,
+  platform: NodeJS.Platform | null
+): readonly string[] {
+  return agent === 'codex' && platform !== null && platform !== 'win32'
+    ? ['-c', 'disable_paste_burst=true']
+    : []
 }
 
 /** Appends the per-launch terminal input flags to a recorded agent command. */
 export function withAgentTerminalInputArgs(
   command: string,
   agent: TuiAgent,
-  platform: NodeJS.Platform,
+  /** OS that runs the agent; null when the host has not reported it. */
+  platform: NodeJS.Platform | null,
   shell: AgentStartupShell
 ): string {
   const inputArgs = agentTerminalInputArgs(agent, platform)
@@ -60,6 +66,8 @@ export function resolveAgentLaunchCommand(args: {
   isRemote?: boolean
   /** Launch-only, like session options: a resumed session must not inherit it. */
   suppressStartupUpdatePrompt?: boolean
+  /** OS that runs the agent when `platform` only picks quoting; null when unreported. */
+  agentHostPlatform?: NodeJS.Platform | null
 }): ResolvedAgentLaunchCommand {
   const override = args.cmdOverrides[args.agent]
   const command =
@@ -75,7 +83,7 @@ export function resolveAgentLaunchCommand(args: {
       ? `${command} ${suppressionArgs.map((arg) => quoteStartupArg(arg, args.shell)).join(' ')}`
       : command,
     args.agent,
-    args.platform,
+    args.agentHostPlatform === undefined ? args.platform : args.agentHostPlatform,
     args.shell
   )
   const trailingTokens = args.agentArgs?.trim()
