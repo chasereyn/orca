@@ -91,7 +91,7 @@ describe('one copy of each chat-picked flag', () => {
       sessionOptions: { model: 'gpt-5.5' },
       agentArgs: '-m o3'
     })
-    expect(result.command).toBe("codex -c 'x '-c' 'disable_paste_burst=true' '-m' 'o3'")
+    expect(result.command).toBe("codex -c 'x '-m' 'o3'")
     expect(result.command).not.toContain('gpt-5.5')
   })
 

@@ -31,14 +31,14 @@ describe('Codex paste-burst launch flag', () => {
     expect(launch.resumeLaunch.agentCommand).toBe('codex')
     expect(resume?.launchCommand.includes(flag)).toBe(expected)
   })
-  it('leaves a command that ends its options with -- alone', () => {
+  it.each(['codex --', 'codex-wrapper --profile work'])('leaves %s alone', (override) => {
     const launch = resolveAgentLaunchCommand({
       agent: 'codex',
-      cmdOverrides: { codex: 'codex --' },
+      cmdOverrides: { codex: override },
       platform: 'linux',
       shell: 'posix'
     })
-    expect(launch.ok && launch.command).toBe('codex --')
+    expect(launch.ok && launch.command).toBe(override)
   })
   it.each(['win32', null] as const)(
     'stays off when the agent host is %s even if quoting is posix',

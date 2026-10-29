@@ -550,7 +550,7 @@ describe('codex detached pane restart executor', () => {
     expect(state.ptyIdsByTabId['tab-1']).toEqual([])
     expect(state.pendingStartupByTabId['tab-1']).toEqual(
       expect.objectContaining({
-        command: `${command} '-c' 'disable_paste_burst=true'`,
+        command,
         startupCommandDelivery: 'shell-ready',
         launchAgent: 'codex'
       })

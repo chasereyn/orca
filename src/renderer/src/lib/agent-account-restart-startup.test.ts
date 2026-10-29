@@ -116,7 +116,7 @@ describe('buildPaneAccountRestartStartup for Codex', () => {
     })
 
     expect(build()).toEqual({
-      command: `${command} '-c' 'disable_paste_burst=true'`,
+      command,
       startupCommandDelivery: 'shell-ready',
       launchAgent: 'codex'
     })
@@ -171,7 +171,7 @@ describe('buildPaneAccountRestartStartup for Codex', () => {
 
     const startup = build()
 
-    expect(startup.command).toBe("codex-wrapper '-c' 'disable_paste_burst=true'")
+    expect(startup.command).toBe('codex-wrapper')
     expect(startup.resumeProviderSession).toBeUndefined()
   })
 

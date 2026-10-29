@@ -283,7 +283,7 @@ export function registerPtyConnectionRemoteRuntimeAttachTests(): void {
       expect(transport.connect).toHaveBeenCalledWith(
         expect.objectContaining({
           // No recorded recipe, so no permission bypass is added to the resumed session.
-          command: "codex '-c' 'disable_paste_burst=true' 'resume' 'codex-session-1'",
+          command: "codex 'resume' 'codex-session-1'",
           launchAgent: 'codex',
           launchConfig: {
             agentCommand: 'codex',

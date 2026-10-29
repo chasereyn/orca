@@ -28,6 +28,11 @@ function agentTerminalInputArgs(
     : []
 }
 
+function isCodexExecutable(token: string | undefined): boolean {
+  const basename = token?.split(/[\\/]/).pop()?.toLowerCase()
+  return basename !== undefined && /^codex(?:\.(?:exe|cmd|bat|ps1))?$/.test(basename)
+}
+
 /** Appends the per-launch terminal input flags to a recorded agent command. */
 export function withAgentTerminalInputArgs(
   command: string,
@@ -38,10 +43,12 @@ export function withAgentTerminalInputArgs(
 ): string {
   const inputArgs = agentTerminalInputArgs(agent, platform)
   const tokens = tokenizeStartupCommand(command, shell)
-  // Why: the command may already set it (the user's own override), or end its options with `--`.
+  // Why: a wrapper may not forward -c, the command may already set it, or end its options with `--`.
   return inputArgs.length &&
+    tokens.ok &&
+    isCodexExecutable(tokens.tokens[0]) &&
     !command.includes('disable_paste_burst') &&
-    !(tokens.ok && tokens.tokens.includes('--'))
+    !tokens.tokens.includes('--')
     ? `${command} ${inputArgs.map((arg) => quoteStartupArg(arg, shell)).join(' ')}`
     : command
 }
