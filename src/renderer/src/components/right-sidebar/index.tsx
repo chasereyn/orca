@@ -80,12 +80,15 @@ function RightSidebarInner(): React.JSX.Element {
   })
   const topActivityStripRef = useMeasuredWidth(setTopActivityStripWidth)
 
-  const panelContent = rightSidebarOpen ? (
-    <div className="flex flex-col flex-1 min-h-0 overflow-hidden scrollbar-sleek-parent">
+  // Why: content stays mounted while closed so custom panel webviews keep their loaded page; built-in panels unmount.
+  const panelContent = (
+    <div
+      className={`flex flex-col flex-1 min-h-0 overflow-hidden scrollbar-sleek-parent${rightSidebarOpen ? '' : ' hidden'}`}
+    >
       {/* Keep panels mounted across worktree switches; remounts caused Windows IPC storms and multi-second freezes. */}
       <RightSidebarPanelContent effectiveTab={effectiveTab} rightSidebarOpen={rightSidebarOpen} />
     </div>
-  ) : null
+  )
 
   const topActivityLayout = useMemo(
     () => getTopActivityBarLayout(visibleItems, topActivityStripWidth, effectiveTab),

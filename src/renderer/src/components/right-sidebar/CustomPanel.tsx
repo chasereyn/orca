@@ -14,7 +14,13 @@ type PanelState = 'loading' | 'ready' | 'unavailable'
 const ERR_ABORTED = -3
 
 /** Right sidebar tab that shows a user-configured web page (Settings > Browser > Custom Panels). */
-export default function CustomPanel({ tabKey }: { tabKey: CustomPanelTabKey }): React.JSX.Element {
+export default function CustomPanel({
+  tabKey,
+  isVisible
+}: {
+  tabKey: CustomPanelTabKey
+  isVisible: boolean
+}): React.JSX.Element {
   const panel = useCustomPanels().find((p) => customPanelTabKey(p.id) === tabKey)
   const url = panel?.url.trim() ?? ''
   const Icon =
@@ -76,7 +82,7 @@ export default function CustomPanel({ tabKey }: { tabKey: CustomPanelTabKey }): 
   }, [url, partition, attempt])
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col">
+    <div className={`relative min-h-0 flex-1 flex-col ${isVisible ? 'flex' : 'hidden'}`}>
       <div
         ref={containerRef}
         className="flex min-h-0 flex-1"
