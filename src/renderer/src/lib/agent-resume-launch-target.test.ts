@@ -152,6 +152,17 @@ describe('resolveAgentResumeLaunchTarget on a Windows client', () => {
     expect(target.agentHostPlatform).toBe(expected)
   })
 
+  it('leaves an SSH host that has not reported its OS unknown', async () => {
+    const { resolveAgentResumeLaunchTarget } = await import('./agent-resume-launch-target')
+    const target = resolveAgentResumeLaunchTarget({
+      ...LOCAL_WINDOWS_ARGS,
+      connectionId: 'ssh-1',
+      executionHostId: 'ssh:ssh-1',
+      worktreePath: '/home/neil/repo'
+    })
+    expect(target.agentHostPlatform).toBeNull()
+  })
+
   it('does not describe a remote runtime host with the local Windows shell setting', async () => {
     await expect(
       resolveWith({

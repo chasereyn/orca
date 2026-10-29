@@ -671,9 +671,7 @@ describe('ai vault resume command runtime', () => {
           resumeCommand: "CODEX_HOME='/root/.codex' codex resume 'session one'"
         }
       })
-    ).toBe(
-      "my-codex '-c' 'disable_paste_burst=true' '-c' 'tui.resume_cwd=current' 'resume' 'session one'"
-    )
+    ).toBe("my-codex '-c' 'tui.resume_cwd=current' 'resume' 'session one'")
   })
 
   it('rebuilds overridden remote commands with the recorded remote host platform', () => {

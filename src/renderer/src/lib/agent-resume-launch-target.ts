@@ -96,12 +96,12 @@ function resolveResumeAgentHostPlatform(
   args: AgentResumeLaunchTargetArgs,
   platform: NodeJS.Platform
 ): NodeJS.Platform | null {
-  if (
-    args.connectionId ||
-    args.remotePlatform ||
-    parseExecutionHostId(args.executionHostId)?.kind !== 'runtime'
-  ) {
+  if (!isRemoteResumeTarget(args) || args.remotePlatform) {
     return platform
+  }
+  // Why: an SSH host that has not reported its OS may be Windows; leave it unknown.
+  if (args.connectionId || parseExecutionHostId(args.executionHostId)?.kind !== 'runtime') {
+    return null
   }
   // Why: a WSL UNC workspace on a Windows server runs its agents inside that distro.
   return args.runtimeHostPlatform === 'win32' &&

@@ -43,8 +43,10 @@ export function withAgentTerminalInputArgs(
 ): string {
   const inputArgs = agentTerminalInputArgs(agent, platform)
   const tokens = tokenizeStartupCommand(command, shell)
-  // Why: a wrapper may not forward -c, the command may already set it, or end its options with `--`.
+  // Why: only a lone Codex invocation is safe; a wrapper may not forward -c, a compound line would
+  // hand it to another command, and the command may already set it or end its options with `--`.
   return inputArgs.length &&
+    !/[;&|<>`$()\n]/.test(command) &&
     tokens.ok &&
     isCodexExecutable(tokens.tokens[0]) &&
     !command.includes('disable_paste_burst') &&
