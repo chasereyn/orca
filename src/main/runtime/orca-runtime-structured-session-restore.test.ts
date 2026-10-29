@@ -1,3 +1,7 @@
+import { partialRuntimeStore } from './runtime-store-partial-fixture'
+import { getDefaultWorkspaceSession } from '../../shared/constants'
+import { agentSessionRecordFixture } from '../native-chat/agent-session-record-test-fixture'
+import { agentSessionConversationView } from '../../shared/agent-session-conversation-view'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { setStructuredAgentSessionHost } from '../native-chat/agent-session-wire/structured-agent-session-registry'
 import { OrcaRuntimeService } from './orca-runtime'
@@ -18,16 +22,77 @@ function installRestoreHost(
       | 'setSessionTabVisibility'
     >
   >
-): void {
+) {
   const { host } = hostTestState()
+  const index = overrides.getPersistedVisibleSessionTabIndex?.()
+  const rows = overrides.listSessionTabs?.() ?? []
+  const records = new Map(
+    rows.map((row) => {
+      const sessionId = row.sessionId.replace(/^(agent-session:)+/, '')
+      return [
+        sessionId,
+        agentSessionConversationView(
+          agentSessionRecordFixture({
+            sessionId,
+            provider: row.agent,
+            location: { workspaceId: row.workspaceId }
+          })
+        )
+      ] as const
+    })
+  )
+  for (const sessionId of index?.sessionIds ?? []) {
+    if (!records.has(sessionId)) {
+      records.set(sessionId, agentSessionConversationView(agentSessionRecordFixture({ sessionId })))
+    }
+  }
+  const visible = new Set(index?.present ? index.sessionIds : records.keys())
+  let present = index?.present ?? visible.size > 0
+  vi.spyOn(host.deps.store, 'getConversation').mockImplementation((id) => records.get(id) ?? null)
+  vi.spyOn(host.deps.store, 'isSessionTabVisible').mockImplementation(
+    (id) => visible.has(id) && records.has(id)
+  )
+  vi.spyOn(host.deps.store, 'isSessionTabRetired').mockImplementation(
+    (id) => present && !visible.has(id)
+  )
+  vi.spyOn(host.deps.store, 'getVisibleSessionTabIndex').mockImplementation(() => ({
+    present,
+    sessionIds: [...visible]
+  }))
   vi.spyOn(host, 'showSessionTabs').mockResolvedValue(undefined)
-  Object.assign(host, overrides)
+  const { setSessionTabVisibility, ...methods } = overrides
+  Object.assign(host, methods)
+  const listed =
+    rows.length > 0
+      ? rows
+      : [...records.values()].map((record) => ({
+          sessionId: record.sessionId,
+          workspaceId: record.location.workspaceId,
+          agent: record.provider
+        }))
+  vi.spyOn(host, 'listSessionTabs').mockImplementation(() =>
+    listed.filter((row) => visible.has(row.sessionId.replace(/^(agent-session:)+/, '')))
+  )
+  vi.spyOn(host, 'getPersistedVisibleSessionTabIndex').mockImplementation(() =>
+    host.deps.store.getVisibleSessionTabIndex()
+  )
+  vi.spyOn(host, 'setSessionTabVisibility').mockImplementation(async (...args) => {
+    await setSessionTabVisibility?.(...args)
+    const [id, show] = args
+    present = true
+    if (show) {
+      visible.add(id)
+    } else {
+      visible.delete(id)
+    }
+  })
   setStructuredAgentSessionHost(host)
+  return host
 }
 
 describe('structured session cold restoration', () => {
   it('publishes a versioned title change and derives listAll titles from the record', async () => {
-    const runtime = new OrcaRuntimeService()
+    const runtime = new OrcaRuntimeService(partialRuntimeStore())
     runtime.projectStructuredAgentSessionTab({
       activate: false,
       sessionId: 'session-1',
@@ -65,7 +130,7 @@ describe('structured session cold restoration', () => {
     unsubscribe()
   })
   it('skips every heavy recovery step when no durable session store exists', async () => {
-    const runtime = new OrcaRuntimeService()
+    const runtime = new OrcaRuntimeService(partialRuntimeStore())
     const refresh = vi.fn(async () => new Set<string>())
     const ensureHost = vi.fn(async () => undefined)
     const reconcileRestartLeases = vi.fn(async () => undefined)
@@ -87,7 +152,7 @@ describe('structured session cold restoration', () => {
   })
 
   it('keeps historical journal parsing outside the terminal-safety fence', async () => {
-    const runtime = new OrcaRuntimeService()
+    const runtime = new OrcaRuntimeService(partialRuntimeStore())
     const refresh = vi.fn(async () => new Set<string>())
     const ensureHost = vi.fn(async () => undefined)
     const reconcileRestartLeases = vi.fn(async () => undefined)
@@ -111,7 +176,7 @@ describe('structured session cold restoration', () => {
   })
 
   it('loads records, inventories PTYs, restores ownership, then projects tabs exactly once', async () => {
-    const runtime = new OrcaRuntimeService()
+    const runtime = new OrcaRuntimeService(partialRuntimeStore())
     const hydrate = vi.fn()
     const refresh = vi.fn(async () => new Set<string>())
     const ensureHost = vi.fn(async () => undefined)
@@ -167,7 +232,7 @@ describe('structured session cold restoration', () => {
   })
 
   it('prefers the durable visible-session index after a legacy profile drops agent tabs', async () => {
-    const runtime = new OrcaRuntimeService()
+    const runtime = new OrcaRuntimeService(partialRuntimeStore())
     const seedSessionTabs = vi.fn(async () => undefined)
     const internal = runtime as unknown as {
       store: { getWorkspaceSession: () => unknown }
@@ -177,8 +242,9 @@ describe('structured session cold restoration', () => {
       refreshMobileSessionPtyRecords(): Promise<Set<string> | null>
       ensureStructuredAgentSessionHost(): Promise<void>
     }
-    internal.store = {
+    internal.store = partialRuntimeStore({
       getWorkspaceSession: () => ({
+        ...getDefaultWorkspaceSession(),
         activeRepoId: null,
         activeWorktreeId: 'workspace-1',
         activeTabId: null,
@@ -186,7 +252,7 @@ describe('structured session cold restoration', () => {
         terminalLayoutsByTabId: {},
         unifiedTabs: { 'workspace-1': [] }
       })
-    }
+    })
     internal.hasPersistedStructuredAgentSessionStore = () => true
     internal.getKnownWorkspaceSessionWorktreeIds = () => new Set()
     internal.hydrateHeadlessMobileSessionTabsFromWorkspaceSession = () => new Set()
@@ -204,11 +270,21 @@ describe('structured session cold restoration', () => {
 
     await runtime.restoreStructuredAgentSessionTabs()
 
-    expect(seedSessionTabs).toHaveBeenCalledWith(['session-survives-rollback'])
+    expect(seedSessionTabs).toHaveBeenCalledExactlyOnceWith()
+    expect(hostTestState().host.getPersistedVisibleSessionTabIndex()).toEqual({
+      present: true,
+      sessionIds: ['session-survives-rollback']
+    })
+    expect(hostTestState().host.isSessionTabVisible('session-survives-rollback')).toBe(true)
+    expect((await runtime.listMobileSessionTabs('id:workspace-1')).tabs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 'agent-session', sessionId: 'session-survives-rollback' })
+      ])
+    )
   })
 
   it('treats an empty durable visible-session index as authoritative', async () => {
-    const runtime = new OrcaRuntimeService()
+    const runtime = new OrcaRuntimeService(partialRuntimeStore())
     const seedSessionTabs = vi.fn(async () => undefined)
     const internal = runtime as unknown as {
       store: { getWorkspaceSession: () => unknown }
@@ -218,8 +294,9 @@ describe('structured session cold restoration', () => {
       refreshMobileSessionPtyRecords(): Promise<Set<string> | null>
       ensureStructuredAgentSessionHost(): Promise<void>
     }
-    internal.store = {
+    internal.store = partialRuntimeStore({
       getWorkspaceSession: () => ({
+        ...getDefaultWorkspaceSession(),
         activeRepoId: null,
         activeWorktreeId: 'workspace-1',
         activeTabId: 'agent-session:closed-session',
@@ -243,7 +320,7 @@ describe('structured session cold restoration', () => {
           ]
         }
       })
-    }
+    })
     internal.hasPersistedStructuredAgentSessionStore = () => true
     internal.getKnownWorkspaceSessionWorktreeIds = () => new Set()
     internal.hydrateHeadlessMobileSessionTabsFromWorkspaceSession = () => new Set()
@@ -258,11 +335,17 @@ describe('structured session cold restoration', () => {
 
     await runtime.restoreStructuredAgentSessionTabs()
 
-    expect(seedSessionTabs).toHaveBeenCalledWith([])
+    expect(seedSessionTabs).toHaveBeenCalledExactlyOnceWith()
+    expect(hostTestState().host.getPersistedVisibleSessionTabIndex()).toEqual({
+      present: true,
+      sessionIds: []
+    })
+    expect(hostTestState().host.isSessionTabVisible('closed-session')).toBe(false)
+    expect((await runtime.listMobileSessionTabs('id:workspace-1')).tabs).toEqual([])
   })
 
   it('normalizes a restored tab id and removes it when closed', async () => {
-    const runtime = new OrcaRuntimeService()
+    const runtime = new OrcaRuntimeService(partialRuntimeStore())
     const closeSessionTab = vi.fn(async () => undefined)
     const closeStructuredSession = vi.fn(async () => {
       const snapshot = await runtime.listMobileSessionTabs('id:workspace-1')
@@ -382,7 +465,7 @@ describe('structured session cold restoration', () => {
   })
 
   it('publishes restored Claude tabs with the Claude title', async () => {
-    const runtime = new OrcaRuntimeService()
+    const runtime = new OrcaRuntimeService(partialRuntimeStore())
     const project = vi.spyOn(runtime, 'projectStructuredAgentSessionTab')
     const internal = runtime as unknown as {
       hasPersistedStructuredAgentSessionStore(): boolean
@@ -432,7 +515,7 @@ describe('structured session cold restoration', () => {
   })
 
   it('commits the host close when the renderer already removed the structured tab', async () => {
-    const runtime = new OrcaRuntimeService()
+    const runtime = new OrcaRuntimeService(partialRuntimeStore())
     runtime.setNotifier({
       closeSessionTab: vi.fn(async () => {
         throw new Error('session_tab_not_found')

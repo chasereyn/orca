@@ -1,3 +1,5 @@
+import type { StructuredAgentSessionHost } from '../../../native-chat/agent-session-wire/structured-agent-session-host'
+import { agentSessionConversationView } from '../../../../shared/agent-session-conversation-view'
 import { agentSessionRecordFixture } from '../../../native-chat/agent-session-record-test-fixture'
 import type { AgentSessionExecutionLocation } from '../../../../shared/agent-session-record'
 import { LOCAL_EXECUTION_HOST_ID, toSshExecutionHostId } from '../../../../shared/execution-host'
@@ -7,6 +9,23 @@ import type { AgentJournalSubmission } from '../../../../shared/agent-session-jo
 import type { AgentMessageSource } from '../../../../shared/agent-session/agent-session-message-source'
 import { getAppEnvironment } from '../../../../shared/app-environment'
 import { DISPATCH_REJECTED_WRITE_FAILED } from '../../../../shared/structured-agent-session-dispatch-rejection'
+
+type WorkerHost = Pick<
+  StructuredAgentSessionHost,
+  | 'hasSession'
+  | 'getSessionTabId'
+  | 'notifySessionTabHidden'
+  | 'setSessionTabVisibility'
+  | 'close'
+  | 'observeJournalPublications'
+> & {
+  deps: {
+    store: Pick<
+      StructuredAgentSessionHost['deps']['store'],
+      'requireWritableRecord' | 'getConversation' | 'getSessionTabId' | 'isSessionTabRetired'
+    >
+  }
+}
 
 const hostRef: { current: unknown } = { current: null }
 const createSpy = vi.fn()
@@ -33,19 +52,32 @@ function installHost(
     wslDistro: null
   }
 ) {
+  const hidden = new Set<string>()
+  const record = (sessionId: string) => agentSessionRecordFixture({ sessionId, location })
   const dispose = vi.fn()
   const observeJournalPublications = vi.fn(() => dispose)
   hostRef.current = {
-    setSessionTabVisibility: async () => {},
+    hasSession: () => false,
+    getSessionTabId: (id: string) => (hidden.has(id) ? null : `agent-session:${id}`),
+    notifySessionTabHidden: () => {},
+    setSessionTabVisibility: async (id: string, visible: boolean) => {
+      if (visible) {
+        hidden.delete(id)
+      } else {
+        hidden.add(id)
+      }
+    },
     close: async () => {},
     deps: {
       store: {
-        requireWritableRecord: (sessionId: string) =>
-          agentSessionRecordFixture({ sessionId, location })
+        requireWritableRecord: record,
+        getConversation: (id: string) => agentSessionConversationView(record(id)),
+        getSessionTabId: (id: string) => (hidden.has(id) ? null : `agent-session:${id}`),
+        isSessionTabRetired: (id: string) => hidden.has(id)
       }
     },
     observeJournalPublications
-  }
+  } satisfies WorkerHost
   return { observeJournalPublications, dispose }
 }
 

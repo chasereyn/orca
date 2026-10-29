@@ -109,7 +109,7 @@ async function startServer(options: { newProcess: boolean }): Promise<void> {
     beginAgentSessionRuntimeIncarnationForTest()
   }
   rig.clock.now = RESTARTED_AT
-  rig.store = await openTestAgentSessionRecordStore(rig.root)
+  rig.store = await openTestAgentSessionRecordStore(rig.root, { legacySessionTabIds: [SESSION] })
   rig.host = new StructuredAgentSessionHost({
     ...old.deps,
     store: rig.store,

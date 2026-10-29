@@ -106,7 +106,7 @@ function crashedClaudeRecord(): AgentSessionRecord {
 
 async function seedCrashedStore(): Promise<void> {
   await seedTestAgentSessionRecordStore(root, { records: [crashedClaudeRecord()] })
-  store = await openTestAgentSessionRecordStore(root)
+  store = await openTestAgentSessionRecordStore(root, { legacySessionTabIds: [SESSION] })
 }
 
 /** Seed an unacknowledged send with a started Bash call and no completion. */
@@ -364,7 +364,7 @@ describe('a turn a read reached before the reconcile proved its owner dead', () 
       ]
     })
     beginAgentSessionRuntimeRecord(root, 'runtime-crashed', TOOL_STARTED_AT - 60_000)
-    store = await openTestAgentSessionRecordStore(root)
+    store = await openTestAgentSessionRecordStore(root, { legacySessionTabIds: [SESSION] })
     openHost({ probeOwner: async () => ({ outcome: 'pid-absent' }) })
     expect(await settledTurn()).toMatchObject(INTERRUPTED_TURN)
 

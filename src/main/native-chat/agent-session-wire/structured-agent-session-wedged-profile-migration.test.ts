@@ -113,7 +113,7 @@ function wedgedRecord(overrides: WedgeOverrides): PersistedAgentSessionRecord {
 
 async function seedStore(record: PersistedAgentSessionRecord): Promise<void> {
   await seedTestAgentSessionRecordStore(root, { records: [record] })
-  store = await openTestAgentSessionRecordStore(root)
+  store = await openTestAgentSessionRecordStore(root, { legacySessionTabIds: [SESSION] })
 }
 
 function openHost(overrides: Partial<StructuredAgentSessionHostDeps> = {}): void {
@@ -277,7 +277,7 @@ describe('already-wedged profiles become usable on load', () => {
       expect(acquire).not.toHaveBeenCalled()
 
       await host.flushAllStreamedEvents()
-      store = await openTestAgentSessionRecordStore(root)
+      store = await openTestAgentSessionRecordStore(root, { legacySessionTabIds: [SESSION] })
       openHost()
       await openTestChats(host)
 

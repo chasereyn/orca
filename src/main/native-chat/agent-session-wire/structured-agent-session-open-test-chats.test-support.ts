@@ -7,7 +7,7 @@ export async function openTestChats(
 ): Promise<void> {
   await host.reconcileRestartLeases()
   await host.seedSessionTabs(ids)
-  for (const { sessionId } of host.listSessionTabs()) {
+  for (const sessionId of ids ?? host.listSessionTabs().map((tab) => tab.sessionId)) {
     await host.revealSession(sessionId)
   }
 }

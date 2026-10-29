@@ -408,7 +408,7 @@ it('late reserved record is rechecked at the actual first visibility draft witho
   const rig = await openAuthorityRuntime(await authorityProfile([B], { records: [] }))
   await rig.runtime.restoreStructuredAgentSessionTabs()
   expect(rig.store.getVisibleSessionTabIndex().present).toBe(false)
-  const now = Date.now()
+  const now = 1_700_000_000_000
   await rig.store.reserveOwner({
     sessionId: B,
     provider: 'codex',

@@ -99,7 +99,7 @@ function openHost(overrides: Partial<StructuredAgentSessionHostDeps> = {}): void
 
 async function reopenStore(): Promise<void> {
   await abandonStructuredAgentSessionHost(host)
-  store = await openTestAgentSessionRecordStore(root)
+  store = await openTestAgentSessionRecordStore(root, { legacySessionTabIds: [SESSION] })
 }
 
 beforeEach(async () => {
@@ -121,7 +121,7 @@ beforeEach(async () => {
       observedAt: NOW
     }
   }))
-  store = await openTestAgentSessionRecordStore(root)
+  store = await openTestAgentSessionRecordStore(root, { legacySessionTabIds: [SESSION] })
   openHost()
 })
 
@@ -296,7 +296,7 @@ describe('recovery exits', () => {
     const outgoingHost = host
     const outgoingStore = store
     supersededHosts.add(outgoingHost)
-    store = await openTestAgentSessionRecordStore(root)
+    store = await openTestAgentSessionRecordStore(root, { legacySessionTabIds: [SESSION] })
     const realProbe = createStructuredAgentSessionOwnerProbe('local')
     let overlapDriven = false
     openHost({
