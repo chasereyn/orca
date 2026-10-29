@@ -137,7 +137,7 @@ export function registerPtyConnectionSleepingResumeBannerTests(): void {
       expect(transport.connect).toHaveBeenCalledWith(
         expect.objectContaining({
           // The record holds no launch recipe, so the resume adds no permission bypass.
-          command: "codex 'resume' 'codex-session-1'",
+          command: "codex '-c' 'disable_paste_burst=true' 'resume' 'codex-session-1'",
           launchAgent: 'codex',
           env: expect.objectContaining({
             ORCA_PANE_KEY: paneKey,
@@ -435,7 +435,7 @@ export function registerPtyConnectionSleepingResumeBannerTests(): void {
         createManager(1) as never,
         createDeps({
           startup: {
-            command: "codex 'resume' 'codex-session-1'",
+            command: "codex '-c' 'disable_paste_burst=true' 'resume' 'codex-session-1'",
             resumeProviderSession: providerSession,
             showSessionRestoredBanner: true
           }
@@ -454,7 +454,7 @@ export function registerPtyConnectionSleepingResumeBannerTests(): void {
       )
       expect(transport.connect).toHaveBeenCalledTimes(1)
       expect(createdTransportOptions[0]).toMatchObject({
-        command: "codex 'resume' 'codex-session-1'",
+        command: "codex '-c' 'disable_paste_burst=true' 'resume' 'codex-session-1'",
         resumeProviderSession: providerSession
       })
     })

@@ -83,6 +83,7 @@ const tabId = 'tab-1'
 const leafId = '11111111-1111-4111-8111-111111111111'
 const paneKey = makePaneKey(tabId, leafId)
 const configuredCommand = 'codex-wrapper --profile work'
+const launchedCommand = `${configuredCommand} '-c' 'disable_paste_burst=true'`
 
 type RestartHarness = ReturnType<typeof installRestartHarness>
 
@@ -379,7 +380,7 @@ describe('account restart through renderer connection and host spawn', () => {
       expect(window.api.pty.spawn).toHaveBeenCalledWith(
         expect.objectContaining({
           replacesPtyId: 'pty-old',
-          command: configuredCommand,
+          command: launchedCommand,
           launchAgent: 'codex',
           startupCommandDelivery: 'shell-ready'
         })
@@ -497,7 +498,7 @@ describe('account restart through renderer connection and host spawn', () => {
             expect(request).toMatchObject({
               method: 'terminal.create',
               params: {
-                command: configuredCommand,
+                command: launchedCommand,
                 launchAgent: 'codex',
                 startupCommandDelivery: 'shell-ready'
               }

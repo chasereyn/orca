@@ -116,7 +116,7 @@ describe('buildPaneAccountRestartStartup for Codex', () => {
     })
 
     expect(build()).toEqual({
-      command,
+      command: `${command} '-c' 'disable_paste_burst=true'`,
       startupCommandDelivery: 'shell-ready',
       launchAgent: 'codex'
     })
@@ -171,7 +171,7 @@ describe('buildPaneAccountRestartStartup for Codex', () => {
 
     const startup = build()
 
-    expect(startup.command).toBe('codex-wrapper')
+    expect(startup.command).toBe("codex-wrapper '-c' 'disable_paste_burst=true'")
     expect(startup.resumeProviderSession).toBeUndefined()
   })
 
@@ -182,7 +182,7 @@ describe('buildPaneAccountRestartStartup for Codex', () => {
       providerSession: { key: 'session_id', id: SESSION_ID }
     })
 
-    expect(build().command).toBe('codex')
+    expect(build().command).toBe("codex '-c' 'disable_paste_burst=true'")
   })
   it('does not resume another agent’s sleeping session when Codex has no session yet', () => {
     seedAgentStatus({ agentType: 'codex' })

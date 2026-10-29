@@ -24,8 +24,11 @@ describe('Codex paste-burst launch flag', () => {
       platform,
       shell: 'posix'
     })
-    expect(launch.ok && launch.command.includes(flag)).toBe(expected)
-    expect(launch.ok && launch.resumeLaunch.agentCommand).toBe('codex')
+    if (!launch.ok) {
+      throw new Error(launch.error)
+    }
+    expect(launch.command.includes(flag)).toBe(expected)
+    expect(launch.resumeLaunch.agentCommand).toBe('codex')
     expect(resume?.launchCommand.includes(flag)).toBe(expected)
   })
 })

@@ -31,7 +31,8 @@ export function withAgentTerminalInputArgs(
   shell: AgentStartupShell
 ): string {
   const inputArgs = agentTerminalInputArgs(agent, platform)
-  return inputArgs.length
+  // Why: a recorded command may already set it, including the user's own override.
+  return inputArgs.length && !command.includes('disable_paste_burst')
     ? `${command} ${inputArgs.map((arg) => quoteStartupArg(arg, shell)).join(' ')}`
     : command
 }
@@ -66,10 +67,14 @@ export function resolveAgentLaunchCommand(args: {
   const suppressionArgs = args.suppressStartupUpdatePrompt
     ? (STARTUP_UPDATE_PROMPT_SUPPRESSION_ARGS[args.agent] ?? [])
     : []
-  const inputHead = withAgentTerminalInputArgs(command, args.agent, args.platform, args.shell)
-  const launchHead = suppressionArgs.length
-    ? `${inputHead} ${suppressionArgs.map((arg) => quoteStartupArg(arg, args.shell)).join(' ')}`
-    : inputHead
+  const launchHead = withAgentTerminalInputArgs(
+    suppressionArgs.length
+      ? `${command} ${suppressionArgs.map((arg) => quoteStartupArg(arg, args.shell)).join(' ')}`
+      : command,
+    args.agent,
+    args.platform,
+    args.shell
+  )
   const trailingTokens = args.agentArgs?.trim()
     ? tokenizeStartupCommand(args.agentArgs.trim(), args.shell)
     : { ok: true as const, tokens: [], spans: [] }
