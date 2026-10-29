@@ -1,3 +1,4 @@
+import type { CustomPanelConfig } from './custom-panels'
 import type { TelemetrySettings } from './telemetry-settings-types'
 import type { BrowserProfileScope } from './browser-profile-scope'
 import type { GlobalSettingsBase } from './global-settings-base'
@@ -300,6 +301,8 @@ export type GlobalSettings = GlobalSettingsBase & {
   notifications: NotificationSettings
   /** Countdown after a Claude agent goes idle showing time left before the prompt cache expires. */
   promptCacheTimerEnabled: boolean
+  /** Right sidebar tabs that show user-configured web pages, in order. */
+  customPanels?: CustomPanelConfig[]
   /** Prompt-cache TTL (ms); only 300000 (5 min standard) or 3600000 (1 hr, extended-TTL plans). */
   promptCacheTtlMs: number
   /** Why: durable main-owned pref so Orca can prepare shared ~/.codex before the renderer hydrates. */

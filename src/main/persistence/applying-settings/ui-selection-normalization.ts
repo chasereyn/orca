@@ -1,3 +1,4 @@
+import { isCustomPanelTabKey } from '../../../shared/custom-panels'
 import type { PersistedState } from '../../../shared/persisted-state-types'
 import { getDefaultUIState } from '../../../shared/constants'
 import { isPluginPanelTabKey } from '../../../shared/plugins/manifest/plugin-manifest'
@@ -68,7 +69,8 @@ export function normalizeRightSidebarTab(tab: unknown): PersistedState['ui']['ri
     tab === 'pr-checks' ||
     tab === 'source-control' ||
     tab === 'checks' ||
-    tab === 'ports'
+    tab === 'ports' ||
+    isCustomPanelTabKey(tab)
   ) {
     return tab
   }

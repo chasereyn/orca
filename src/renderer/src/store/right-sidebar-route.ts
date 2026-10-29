@@ -1,3 +1,4 @@
+import { isCustomPanelTabKey } from '../../../shared/custom-panels'
 import type {
   ActiveRightSidebarTab,
   RightSidebarExplorerView
@@ -41,7 +42,8 @@ export function normalizeRightSidebarRoute(
     tab === 'pr-checks' ||
     tab === 'source-control' ||
     tab === 'checks' ||
-    tab === 'ports'
+    tab === 'ports' ||
+    isCustomPanelTabKey(tab)
   ) {
     return {
       rightSidebarTab: tab,

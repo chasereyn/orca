@@ -1,3 +1,4 @@
+import { isCustomPanelTabKey } from '../custom-panels'
 import { z } from 'zod'
 import { isFeatureTipId } from '../feature-tips'
 import {
@@ -49,11 +50,14 @@ export const STATIC_RIGHT_SIDEBAR_TABS = [
 
 // Plugin panels are open-ended `plugin:<publisher>.<id>/<panel>` keys, so the
 // schema validates their shape rather than enumerating them.
-export const RightSidebarTabParam = z.custom<StaticRightSidebarTab | `plugin:${string}`>(
+export const RightSidebarTabParam = z.custom<
+  StaticRightSidebarTab | `plugin:${string}` | `custom-panel:${string}`
+>(
   (value) =>
     typeof value === 'string' &&
     (STATIC_RIGHT_SIDEBAR_TABS.includes(value as StaticRightSidebarTab) ||
-      isPluginPanelTabKey(value)),
+      isPluginPanelTabKey(value) ||
+      isCustomPanelTabKey(value)),
   { message: 'Unknown right sidebar tab' }
 )
 

@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import { Plug, Files, GitBranch, ListChecks, Workflow } from 'lucide-react'
+import { customPanelTabKey } from '../../../../shared/custom-panels'
+import { CUSTOM_PANEL_ICON_COMPONENTS, useCustomPanels } from './custom-panels'
 import { useAppStore } from '@/store'
 import { useRepoById } from '@/store/selectors'
 import { isFolderRepo } from '../../../../shared/repo-kind'
@@ -58,6 +60,7 @@ export function useRightSidebarActivityItems({
     )
   )
   const pluginSystemEnabled = useAppStore((s) => s.settings?.pluginSystemEnabled === true)
+  const customPanels = useCustomPanels()
   const pluginPanels = usePluginPanels()
   const visiblePluginPanels = useMemo(
     () => (pluginSystemEnabled ? pluginPanels : []),
@@ -123,6 +126,12 @@ export function useRightSidebarActivityItems({
         shortcut: portsShortcut === 'Unassigned' ? '' : portsShortcut,
         sshOnly: true
       },
+      ...customPanels.map((panel) => ({
+        id: customPanelTabKey(panel.id),
+        icon: CUSTOM_PANEL_ICON_COMPONENTS[panel.icon] ?? CUSTOM_PANEL_ICON_COMPONENTS.globe,
+        title: panel.title || panel.url,
+        shortcut: ''
+      })),
       // Append plugin tabs to preserve built-in navigation positions.
       ...getPluginPanelActivityItems(visiblePluginPanels, pluginPanelErrors)
     ],
@@ -130,6 +139,7 @@ export function useRightSidebarActivityItems({
     [
       checksShortcut,
       explorerShortcut,
+      customPanels,
       pluginPanelErrors,
       visiblePluginPanels,
       portsShortcut,

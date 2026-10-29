@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { lazyWithRetry as lazy } from '@/lib/lazy-with-retry'
 import type { ActiveRightSidebarTab } from '@/store/slices/editor'
+import { isCustomPanelTabKey } from '../../../../shared/custom-panels'
 import { isPluginPanelTabKey } from '../../../../shared/plugins/manifest/plugin-manifest'
 
 const FileExplorer = lazy(() => import('./FileExplorer'))
@@ -11,6 +12,7 @@ const AiVaultSidebarPanel = lazy(() => import('./AiVaultSidebarPanel'))
 const FolderWorkspaceWorktreesPanel = lazy(() => import('./FolderWorkspaceWorktreesPanel'))
 const FolderWorkspacePrChecksPanel = lazy(() => import('./FolderWorkspacePrChecksPanel'))
 const PluginPanel = lazy(() => import('./PluginPanel'))
+const CustomPanel = lazy(() => import('./CustomPanel'))
 
 type RightSidebarPanelContentProps = {
   effectiveTab: ActiveRightSidebarTab
@@ -37,6 +39,9 @@ export function RightSidebarPanelContent({
           <FolderWorkspacePrChecksPanel
             isVisible={rightSidebarOpen && effectiveTab === 'pr-checks'}
           />
+        )}
+        {isCustomPanelTabKey(effectiveTab) && (
+          <CustomPanel key={effectiveTab} tabKey={effectiveTab} />
         )}
         {/* Remount on plugin changes so an old iframe cannot post through the next plugin's rebound bridge. */}
         {isPluginPanelTabKey(effectiveTab) && (

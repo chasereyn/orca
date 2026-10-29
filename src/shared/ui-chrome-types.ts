@@ -100,6 +100,7 @@ export type RightSidebarTab =
   | 'source-control'
   | 'checks'
   | 'ports'
+  | `custom-panel:${string}`
   // Plugin IDs encode their dynamic panel namespace without opening the static tab union.
   | `plugin:${string}`
 export type ActiveRightSidebarTab = Exclude<RightSidebarTab, 'search'>
